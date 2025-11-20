@@ -1,13 +1,14 @@
-name: Terraform S3 CI/CD
+name: Terraform S3 Pipeline
 
 on:
-  push:
+  pull_request:
     branches:
       - main
     paths:
       - 'infra-s3/**'
       - '.github/workflows/**'
-  pull_request:
+
+  push:
     branches:
       - main
     paths:
@@ -19,28 +20,42 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout code
+      - name: Checkout
         uses: actions/checkout@v3
 
-      - name: Set up Terraform
-        uses: hashicorp/setup-terraform@v2
-        with:
-          terraform_version: 1.5.0
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
 
+      # -------- PR VALIDATION --------
       - name: Terraform fmt
+        if: github.event_name == 'pull_request'
         run: terraform -chdir=infra-s3 fmt -check
 
-      - name: Terraform init
-        run: terraform -chdir=infra-s3 init \
-              -backend-config="bucket=pgr301-terraform-state-74" \
-              -backend-config="region=eu-west-1" \
-              -reconfigure
+      - name: Terraform init (PR)
+        if: github.event_name == 'pull_request'
+        run: |
+          terraform -chdir=infra-s3 init \
+            -backend-config="bucket=pgr301-terraform-state-74" \
+            -backend-config="region=eu-west-1" \
+            -reconfigure
 
       - name: Terraform validate
+        if: github.event_name == 'pull_request'
         run: terraform -chdir=infra-s3 validate
 
       - name: Terraform plan
+        if: github.event_name == 'pull_request'
         run: terraform -chdir=infra-s3 plan
+
+
+      # -------- MAIN DEPLOY --------
+      - name: Terraform init (main)
+        if: github.ref == 'refs/heads/main'
+        run: |
+          terraform -chdir=infra-s3 init \
+            -backend-config="bucket=pgr301-terraform-state-74" \
+            -backend-config="region=eu-west-1" \
+            -reconfigure
 
       - name: Terraform apply
         if: github.ref == 'refs/heads/main'
