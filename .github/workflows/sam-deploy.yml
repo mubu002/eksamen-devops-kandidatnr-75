@@ -1,4 +1,4 @@
-name: Deploy SAM Application
+name: SAM Application CI/CD
 
 on:
   push:
@@ -13,7 +13,7 @@ on:
       - 'sam-comprehend/**'
 
 jobs:
-  deploy:
+  sam:
     runs-on: ubuntu-latest
 
     steps:
@@ -23,7 +23,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
-          python-version: '3.9'
+          python-version: '3.11'
 
       - name: Set up SAM CLI
         uses: aws-actions/setup-sam@v2
@@ -35,10 +35,20 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: eu-west-1
 
-      - name: Deploy SAM application
+      - name: SAM Validate
+        working-directory: ./sam-comprehend
+        run: sam validate
+
+      - name: SAM Build
+        working-directory: ./sam-comprehend
+        run: sam build
+
+      - name: SAM Deploy (only on main branch)
+        if: github.ref == 'refs/heads/main'
         working-directory: ./sam-comprehend
         run: |
           sam deploy \
-            --stack-name aialpha-sentiment-glennbech \
-            --no-confirm-changeset \
-            --no-fail-on-empty-changeset
+            --stack-name eksamen-devops-kandidatnr-75-sam \
+            --s3-bucket eksamen-devops-kandidatnr-75-s3 \
+            --capabilities CAPABILITY_IAM \
+            --no-confirm-changeset
