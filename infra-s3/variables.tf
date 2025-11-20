@@ -1,5 +1,5 @@
 variable "bucket_name" {
-  description = "Name of the S3 bucket"
+  description = "Navnet på S3-bucketen som lagrer analysefiler"
   type        = string
   default     = "eksamen-devops-kandidatnrrr-75-s3"
 }

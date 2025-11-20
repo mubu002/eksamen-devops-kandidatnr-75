@@ -11,7 +11,7 @@ Globals:
 Parameters:
   S3BucketName:
     Type: String
-    Default: pgr301-terraform-state-74
+    Default: eksamen-devops-kandidatnr-75-s3
     Description: S3 bucket for storing sentiment analysis results
 
 Resources:
