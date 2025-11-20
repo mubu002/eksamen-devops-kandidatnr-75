@@ -1,4 +1,4 @@
-name: Terraform S3 Pipeline
+name: Terraform S3 CI/CD
 
 on:
   push:
@@ -6,13 +6,13 @@ on:
       - main
     paths:
       - 'infra-s3/**'
-      - '.github/**'
+      - '.github/workflows/**'
   pull_request:
     branches:
       - main
     paths:
       - 'infra-s3/**'
-      - '.github/**'
+      - '.github/workflows/**'
 
 jobs:
   terraform:
@@ -22,7 +22,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Setup Terraform
+      - name: Set up Terraform
         uses: hashicorp/setup-terraform@v2
         with:
           terraform_version: 1.5.0
@@ -31,14 +31,17 @@ jobs:
         run: terraform -chdir=infra-s3 fmt -check
 
       - name: Terraform init
-        run: terraform -chdir=infra-s3 init -backend-config="bucket=pgr301-terraform-state-74" -backend-config="region=eu-west-1"
+        run: terraform -chdir=infra-s3 init \
+              -backend-config="bucket=pgr301-terraform-state-74" \
+              -backend-config="region=eu-west-1" \
+              -reconfigure
 
       - name: Terraform validate
         run: terraform -chdir=infra-s3 validate
 
       - name: Terraform plan
-        run: terraform -chdir=infra-s3 plan -out=tfplan
+        run: terraform -chdir=infra-s3 plan
 
       - name: Terraform apply
         if: github.ref == 'refs/heads/main'
-        run: terraform -chdir=infra-s3 apply -auto-approve tfplan
+        run: terraform -chdir=infra-s3 apply -auto-approve
