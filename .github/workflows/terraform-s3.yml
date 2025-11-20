@@ -1,0 +1,51 @@
+name: Terraform S3 CI/CD
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'infra-s3/**'
+      - '.github/workflows/**'
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'infra-s3/**'
+      - '.github/workflows/**'
+
+jobs:
+  terraform:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_version: 1.5.0
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: eu-west-1
+
+      - name: Terraform fmt
+        run: terraform -chdir=infra-s3 fmt -check
+
+      - name: Terraform init
+        run: terraform -chdir=infra-s3 init -backend-config="bucket=pgr301-terraform-state-74" -backend-config="region=eu-west-1" -reconfigure
+
+      - name: Terraform validate
+        run: terraform -chdir=infra-s3 validate
+
+      - name: Terraform plan
+        run: terraform -chdir=infra-s3 plan -out=tfplan
+
+      - name: Terraform apply
+        if: github.ref == 'refs/heads/main'
+        run: terraform -chdir=infra-s3 apply -auto-approve tfplan

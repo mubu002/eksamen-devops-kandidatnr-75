@@ -1,5 +1,5 @@
 {
-  "name": "AWS SAM + Java 12",
+  "name": "AWS SAM + Java 17 + Terraform",
   "image": "mcr.microsoft.com/devcontainers/base:ubuntu",
   "features": {
     "ghcr.io/devcontainers/features/common-utils:2": {
@@ -11,11 +11,14 @@
       "version": "latest"
     },
     "ghcr.io/devcontainers/features/java:1": {
-      "version": "12",
+      "version": "17",
       "installMaven": "true"
+    },
+    "ghcr.io/devcontainers/features/terraform:1": {
+      "version": "1.6.0"
     }
   },
-  "postCreateCommand": "python3 -m pip install --upgrade pip pipx && pipx install aws-sam-cli && aws --version && sam --version && java -version && mvn -v && docker --version",
+  "postCreateCommand": "python3 -m pip install --upgrade pip pipx && pipx install aws-sam-cli && aws --version && sam --version && java -version && mvn -v && docker --version && terraform -v",
   "remoteUser": "vscode",
   "customizations": {
     "vscode": {
@@ -28,11 +31,12 @@
       "settings": {
         "java.configuration.runtimes": [
           {
-            "name": "JavaSE-12",
-            "path": "/usr/lib/jvm/msopenjdk-12"
+            "name": "JavaSE-17",
+            "path": "/usr/local/sdkman/candidates/java/current"
           }
         ]
       }
     }
   }
 }
+
