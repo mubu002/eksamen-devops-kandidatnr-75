@@ -1,26 +1,23 @@
-name: SAM Deploy Pipeline
+name: SAM Application CI/CD
 
 on:
-  pull_request:
-    branches:
-      - main
-    paths:
-      - 'sam-comprehend/**'
-      - '.github/workflows/sam-deploy.yml'
-
   push:
     branches:
       - main
     paths:
       - 'sam-comprehend/**'
-      - '.github/workflows/sam-deploy.yml'
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'sam-comprehend/**'
 
 jobs:
-  sam-pipeline:
+  sam:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repository
+      - name: Checkout code
         uses: actions/checkout@v3
 
       - name: Set up Python
@@ -42,20 +39,19 @@ jobs:
           aws-region: eu-west-1
 
       - name: SAM Validate
-        working-directory: sam-comprehend
+        working-directory: ./sam-comprehend
         run: sam validate
 
       - name: SAM Build
-        working-directory: sam-comprehend
+        working-directory: ./sam-comprehend
         run: sam build
 
-      # ❗ KUN PÅ MAIN: Deploy
-      - name: SAM Deploy
+      - name: SAM Deploy (only on main branch)
         if: github.ref == 'refs/heads/main'
-        working-directory: sam-comprehend
+        working-directory: ./sam-comprehend
         run: |
           sam deploy \
-            --stack-name sentiment-kandidat-74 \
-            --no-confirm-changeset \
-            --no-fail-on-empty-changeset \
-            --capabilities CAPABILITY_IAM
+            --stack-name eksamen-devops-kandidatnr-75-sam \
+            --s3-bucket eksamen-devops-kandidatnr-75-s3 \
+            --capabilities CAPABILITY_IAM \
+            --no-confirm-changeset
