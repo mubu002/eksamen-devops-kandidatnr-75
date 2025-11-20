@@ -1,4 +1,4 @@
-name: Terraform CI/CD
+name: Terraform S3 Pipeline
 
 on:
   push:
@@ -6,22 +6,20 @@ on:
       - main
     paths:
       - 'infra-s3/**'
-      - '.github/workflows/**'
+      - '.github/**'
   pull_request:
+    branches:
+      - main
     paths:
       - 'infra-s3/**'
-
-env:
-  AWS_REGION: eu-west-1
-  BUCKET_NAME: pgr301-terraform-state-74
+      - '.github/**'
 
 jobs:
   terraform:
-    name: Terraform
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repository
+      - name: Checkout code
         uses: actions/checkout@v3
 
       - name: Setup Terraform
@@ -29,27 +27,18 @@ jobs:
         with:
           terraform_version: 1.5.0
 
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v2
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ${{ env.AWS_REGION }}
-
-      - name: Terraform Format Check
+      - name: Terraform fmt
         run: terraform -chdir=infra-s3 fmt -check
 
-      - name: Terraform Init
-        run: terraform -chdir=infra-s3 init \
-             -backend-config="bucket=${{ env.BUCKET_NAME }}" \
-             -backend-config="region=${{ env.AWS_REGION }}"
+      - name: Terraform init
+        run: terraform -chdir=infra-s3 init -backend-config="bucket=pgr301-terraform-state-74" -backend-config="region=eu-west-1"
 
-      - name: Terraform Validate
+      - name: Terraform validate
         run: terraform -chdir=infra-s3 validate
 
-      - name: Terraform Plan
-        run: terraform -chdir=infra-s3 plan
+      - name: Terraform plan
+        run: terraform -chdir=infra-s3 plan -out=tfplan
 
-      - name: Terraform Apply
+      - name: Terraform apply
         if: github.ref == 'refs/heads/main'
-        run: terraform -chdir=infra-s3 apply -auto-approve
+        run: terraform -chdir=infra-s3 apply -auto-approve tfplan
