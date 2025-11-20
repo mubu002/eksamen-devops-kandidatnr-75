@@ -25,11 +25,8 @@ jobs:
         with:
           python-version: '3.11'
 
-      - name: Install SAM CLI
-        run: |
-          wget https://github.com/aws/aws-sam-cli/releases/latest/download/aws-sam-cli-linux-x86_64.zip
-          unzip aws-sam-cli-linux-x86_64.zip -d sam-installation
-          sudo ./sam-installation/install
+      - name: Set up SAM CLI
+        uses: aws-actions/setup-sam@v2
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v2
